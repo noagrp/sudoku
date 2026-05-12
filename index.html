@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Sudoku</title>
+    <title>Sudokolic</title>
     <style>
         :root {
             --bg: #121214;
@@ -13,6 +13,9 @@
             --border: #444;
             --fixed: #777;
             --win: #4caf50;
+            /* Neon Colors */
+            --neon-primary: #00f2ff;
+            --neon-secondary: #3d5afe;
         }
 
         body {
@@ -42,15 +45,31 @@
             font-size: 0.9rem;
         }
 
-        /* 9x9 Grid Layout */
+        /* --- NEON FRAME ADJUSTMENTS --- */
         #grid {
             display: grid;
             grid-template-columns: repeat(9, 1fr);
-            border: 3px solid var(--text);
             width: 92vw;
             max-width: 450px;
             aspect-ratio: 1 / 1;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+            box-shadow: 0 0 20px rgba(0, 242, 255, 0.2);
+            position: relative;
+            padding: 4px; /* Space for the neon frame */
+            background: linear-gradient(var(--bg), var(--bg)) padding-box,
+                        linear-gradient(var(--angle), var(--neon-primary), var(--neon-secondary), var(--neon-primary)) border-box;
+            border: 4px solid transparent;
+            border-radius: 4px;
+            animation: rotateGradient 4s linear infinite;
+        }
+
+        @property --angle {
+            syntax: '<angle>';
+            initial-value: 0deg;
+            inherits: false;
+        }
+
+        @keyframes rotateGradient {
+            to { --angle: 360deg; }
         }
 
         .cell {
@@ -65,15 +84,15 @@
             transition: all 0.1s;
         }
 
-        /* 3x3 Subgrid Dividers */
-        .cell:nth-child(3n) { border-right: 3px solid var(--text); }
-        .cell:nth-child(9n) { border-right: 0.5px solid var(--border); } /* Fix outer edge */
+        /* 3x3 Subgrid Dividers - Adjusted to Neon */
+        .cell:nth-child(3n) { border-right: 3px solid var(--neon-secondary); }
+        .cell:nth-child(9n) { border-right: 0.5px solid var(--border); } 
         .cell:nth-child(n+19):nth-child(-n+27),
-        .cell:nth-child(n+46):nth-child(-n+54) { border-bottom: 3px solid var(--text); }
+        .cell:nth-child(n+46):nth-child(-n+54) { border-bottom: 3px solid var(--neon-secondary); }
 
-        .cell.selected { background: var(--highlight); color: white; }
+        .cell.selected { background: var(--highlight); color: white; box-shadow: inset 0 0 10px var(--neon-primary); }
         .cell.fixed { color: var(--fixed); font-weight: bold; cursor: default; background: #16161c; }
-        .cell.correct { color: #00ffcc; }
+        .cell.correct { color: #00ffcc; text-shadow: 0 0 8px #00ffcc; }
 
         .numpad {
             display: grid;
@@ -104,7 +123,7 @@
 <body>
 
     <div class="header">
-        <h1>Sudoku</h1>
+        <h1>Sudokolic</h1>
         <div class="stats">
             <span id="timer">00:00</span>
             <span id="clues">Clues: 0</span>
@@ -162,7 +181,6 @@
         let timerInterval;
         let seconds = 0;
 
-        // --- Logic: Procedural Board Generation ---
         function generateSudoku() {
             let board = [
                 1,2,3,4,5,6,7,8,9,
@@ -175,8 +193,6 @@
                 6,4,5,9,7,8,3,1,2,
                 9,7,8,3,1,2,6,4,5
             ];
-
-            // Shuffling logic to ensure board is different every time
             const nums = [1,2,3,4,5,6,7,8,9].sort(() => Math.random() - 0.5);
             return board.map(n => nums[n-1]);
         }
@@ -192,7 +208,6 @@
             currentGrid = [...solution];
             initialMask = new Array(81).fill(true);
             
-            // This is where we "calculate" the difficulty
             let removed = 0;
             while(removed < cellsToRemove) {
                 let idx = Math.floor(Math.random() * 81);
@@ -244,9 +259,7 @@
         }
 
         function checkWin() {
-            // Check if full
             if (currentGrid.every(val => val !== 0)) {
-                // Check if correct against solution
                 const isCorrect = currentGrid.every((val, i) => val === solution[i]);
                 if (isCorrect) {
                     clearInterval(timerInterval);
@@ -268,7 +281,6 @@
             timerElement.innerText = `${m}:${s}`;
         }
 
-        // PC Controls
         window.addEventListener('keydown', (e) => {
             if (e.key >= 1 && e.key <= 9) inputNumber(parseInt(e.key));
             if (e.key === 'Backspace' || e.key === '0') inputNumber(0);
